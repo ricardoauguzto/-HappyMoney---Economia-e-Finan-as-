@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' file: data:; connect-src 'self'"
+    />
+    <title>HappyMoney</title>
+    <link rel="stylesheet" href="./styles/base.css" />
+    <link rel="stylesheet" href="./styles/components.css" />
+    <link rel="stylesheet" href="./styles/screens.css" />
+  </head>
+  <body>
+    <div id="splash" class="splash" aria-hidden="true">
+      <div class="splash-inner">
+        <img id="splash-logo" class="splash-logo" alt="HappyMoney" />
+        <div class="splash-texto">
+          <div class="splash-titulo">HappyMoney</div>
+          <div class="splash-tag">economia pessoal · feito por Adenstack</div>
+        </div>
+        <div class="splash-barra">
+          <div class="splash-preenchimento"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <img id="logo" class="brand-logo" alt="HappyMoney" />
+          <div class="brand-text">
+            <span class="brand-name">HappyMoney</span>
+            <span class="brand-tag">economia pessoal</span>
+          </div>
+        </div>
+        <div class="topbar-acoes">
+          <button
+            id="btn-configuracoes"
+            class="icon-btn ghost"
+            title="Configurações"
+            aria-label="Configurações"
+          ></button>
+        </div>
+      </header>
+      <main id="tela" class="tela"></main>
+    </div>
+
+    <div id="modal-root" class="modal-root" hidden></div>
+    <div id="toast-root" class="toast-root" aria-live="polite"></div>
+
+    <script src="./js/bundle.js"></script>
+  </body>
+</html>
