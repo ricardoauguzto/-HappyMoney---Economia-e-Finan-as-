@@ -1,0 +1,66 @@
+{
+  "name": "happymoney",
+  "productName": "HappyMoney",
+  "version": "1.0.0",
+  "description": "Plataforma pessoal de economia e planejamento financeiro — offline e 100% local para Windows.",
+  "author": "HappyMoney",
+  "license": "MIT",
+  "main": "main/main.js",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/gerarBundle.js",
+    "prestart": "node scripts/gerarBundle.js",
+    "start": "electron .",
+    "presmoke": "node scripts/gerarBundle.js",
+    "smoke": "electron . --smoke",
+    "test": "node --test tests/finance.test.js tests/skFormat.test.js tests/storage.test.js",
+    "predist": "node scripts/gerarBundle.js",
+    "dist:dir": "electron-builder --win dir",
+    "dist": "electron-builder --win nsis portable"
+  },
+  "build": {
+    "appId": "br.com.happymoney.desktop",
+    "productName": "HappyMoney",
+    "copyright": "HappyMoney",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main/**/*",
+      "shared/**/*",
+      "renderer/**/*",
+      "scripts/**/*",
+      "logo.png",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "logo.png",
+        "to": "logo.png"
+      }
+    ],
+    "win": {
+      "icon": "logo.png",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "HappyMoney",
+      "artifactName": "HappyMoney-${version}-Setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "HappyMoney-${version}-Portable.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3"
+  }
+}

@@ -1,0 +1,4 @@
+﻿node_modules/
+*.sk
+dist/
+renderer/js/bundle.js

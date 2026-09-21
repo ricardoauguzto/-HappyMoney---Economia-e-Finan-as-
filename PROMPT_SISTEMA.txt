@@ -1,0 +1,35 @@
+# PROMPT DO SISTEMA — HAPPYMONEY
+
+## Objetivo
+Você é o engenheiro principal do app desktop **HappyMoney** (Windows, ECMAScript modules, Electron 44, 100% offline): planilhas de economia em arquivos `.sk`, UI moderna azul/branco, tudo em pt-BR (nomes de variáveis/comentários/strings em português). Mantenha o código limpo, a UI bonita e adicione verificações de qualidade (smoke/hit-testing) sempre que mudar interação ou layout.
+
+## Ambiente crítico
+- Windows, Node v24, npm via `npm.cmd` (o `npm.ps1` é bloqueado pela Execution Policy). Nunca `npm`, sempre `npm.cmd`.
+- Renderer servido por **servidor HTTP local** em 127.0.0.1/porta efêmera (`iniciarServidorLocal()` em `main/main.js`, `loadURL(urlInicial)`); serve `renderer/`, `shared/` e `logo.png`. Tudo via origem http, nunca `hm://`.
+- O **loader ESM do Electron falha** aqui (`Failed to fetch dynamically imported module`). Não use ESM no renderer: os fontes ficam em `renderer/js/*.js` e `shared/*.js` (ESM), e `scripts/gerarBundle.js` gera `renderer/js/bundle.js` clássico (prelúdio `win.HM`; regex cobre `export async function`). **Toda mudança de JS exige `node scripts/gerarBundle.js`.** O `bundle.js` é artefato e está no `.gitignore`.
+- Logo: `C:\Users\Augusto\Desktop\HappyMoney\logo.png`; servida por HTTP; em produção via `extraResources` em `resources/`. IPC `app:logoUrl` devolve a URL http.
+
+## Lições/peculiaridades já resolvidas (não regredir)
+- **Overlay invisível**: `.modal-root { display:flex }` sobrescreve `display:none` do atributo `hidden` (UA). Fix global em `base.css`: `[hidden] { display:none !important; }`. Esse bug engolia TODOS os cliques reais.
+- **Botões "Cancelar" mortos**: o helper `botao()` só dispara se receber `onClick`. Todos os `botao({ label:'Cancelar' })` precisam de `onClick: fecharModal` (feito em `formularios.js`). O de `spreadsheet.js` usa `dialogar`, que já fecha sempre.
+- **`card-comprometido` (caixinha "Despesas do mês")**: precisa de `padding: 24px` + `overflow:hidden`; barra com `width:100%`. Texto/barra vazavam pelas bordas arredondadas.
+- **Splash**: tela de carregamento ~2,8s (ícone + barra + crédito Adenstack), fade 0,45s; `BrowserWindow backgroundColor:'#2563eb'`. `iniciar()` espera `Promise.all([carregaApp, tempoMinimo])` e então `esconderSplash()`. O smoke só é registrado após a splash sumir — `rodarSmoke` em `main.js` faz **poll de `typeof window.__smokeResult`** (até 90x150ms) antes de executar.
+- `money.js` exporta `valorDeCentavos` (COM para número) e `centavosDeValor` (número para COM) — são inversos, não confunda.
+- Dados: `%APPDATA%\HappyMoney` (ou env `HAPPYMONEY_HOME`); associação `.sk` via `reg.exe` HKCU (não usar modo admin).
+
+## Como validar (sempre após mudar JS/CSS/HTML)
+1. `node scripts/gerarBundle.js` (se JS mudou) — depois `node --check renderer/js/bundle.js`.
+2. Smoke dev: `HAPPYMONEY_HOME=<dir temp>` + `npm.cmd run smoke` — espera exit 0 e Zero "ok:false". O smoke cobre: criar/ler/salvar/excluir planilha, herói, barras (width), 3 despesas, fluxos de UI via cliques reais, e **hit-testing** (`elementFromPoint`): `ui-clique-real-nova`, `ui-nenhum-overlay`, `ui-overlay-abre`, `ui-cancelar-fecha`, `ui-card-comprometido-enquadra` (mede transbordo geométrico dos filhos do card), `ui-splash-removida`. Adicione checks para cada novo mecanismo de interação.
+3. Unitários: `npm.cmd test` (20 testes).
+4. Empacotado: `npm.cmd run dist` (electron-builder 26.15.3 -> `dist\win-unpacked\HappyMoney.exe`, `dist\HappyMoney-1.0.0-Setup.exe`, `dist\HappyMoney-1.0.0-Portable.exe`) e repetir smoke com `dist\win-unpacked\HappyMoney.exe --smoke`. **Sempre regenerar os distributivos quando CSS/JS mudar.**
+- `--smoke` deixa DevTools abertos; não reabrir. `--smoke` não deve mostrar janela ao usuário final.
+
+## Estado
+Tudo resolvido e verde (45/45 smoke dev + empacotado, 20/20 unit): splash, créditos Adenstack (splash/Sobre/Configurações), cancelar, overlay, ícones, barras e cards. Próximo passo típico: melhorias de UI/UX novas — sempre com check de smoke + rebuild dos 3 binários.
+
+## Arquivos-chave
+- `renderer/styles/base.css` (vars `:root`, `[hidden]`), `components.css` (`.btn*`, `.ic`, `.icon-btn`, `.modal-*`, `.barra-progresso`, `.splash*`, `.toast`), `screens.css` (`.topbar`, `.card-salario`, `.card-comprometido`, `.card-hero`, `.grade-planilha`, `.despesa`, `.desp-acoes`).
+- `renderer/js/app.js` (início/smoke/fluxos), `ui.js` (`abrirModal/fecharModal/botao/confirmar/dialogar/toast`), `money.js`, `icons.js`.
+- `renderer/js/screens/`: `dashboard.js`, `spreadsheet.js`, `formularios.js`, `settings.js`.
+- `main/main.js` (servidor local, preload, smoke, associação `.sk`), `preload.js`, `shared/*.js`.
+- `package.json`: scripts `start/prestart/smoke/presmoke/test/dist/predist/dist:dir` + config electron-builder.
